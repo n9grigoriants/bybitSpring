@@ -14,7 +14,7 @@ public class BuyerEntity {
     private Long id;
 
     @ManyToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    @JoinColumn(name = "user_id", referencedColumnName = "id", unique = true)
     private UserEntity user;
 
     @Column(name = "api_key", length = 100)
@@ -27,4 +27,5 @@ public class BuyerEntity {
     private Boolean isActive;
 
     public BuyerEntity() {}
+
 }

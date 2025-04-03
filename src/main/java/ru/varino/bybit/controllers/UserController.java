@@ -1,9 +1,9 @@
 package ru.varino.bybit.controllers;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityExistsException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,15 +20,14 @@ public class UserController {
     private UserService userService;
 
     @Tag(name = "post", description = "POST methods of API")
+    @Operation(summary = "Сохранить юзера", description = "Сохраняет юзера в бд (Любой, кто хоть раз написал /start)")
     @PostMapping
     public ResponseEntity<String> registerUser(@RequestBody UserEntity user) {
         try {
             userService.save(user);
         } catch (EntityExistsException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.internalServerError().body(e.getMessage());
         }
-
-
         return ResponseEntity.ok("Пользователь сохранён");
     }
 }
