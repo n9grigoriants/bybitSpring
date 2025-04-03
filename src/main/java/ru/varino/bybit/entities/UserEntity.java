@@ -1,4 +1,4 @@
-package ru.varino.bybit.controllers.entities;
+package ru.varino.bybit.entities;
 import jakarta.persistence.*;
 import lombok.Data;
 
