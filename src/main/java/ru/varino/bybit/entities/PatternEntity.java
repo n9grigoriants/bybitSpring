@@ -1,11 +1,13 @@
 package ru.varino.bybit.entities;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
 @Entity
 @Table(name = "pattern")
+@AllArgsConstructor
 public class PatternEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,4 +36,6 @@ public class PatternEntity {
 
     @Column(name = "limit_price", length = 100, nullable = true)
     private String limitPrice;
+
+    public PatternEntity() {}
 }
