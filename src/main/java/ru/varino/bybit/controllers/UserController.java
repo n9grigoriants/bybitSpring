@@ -1,35 +1,51 @@
 package ru.varino.bybit.controllers;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.persistence.EntityExistsException;
-import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
 import ru.varino.bybit.entities.UserEntity;
 import ru.varino.bybit.services.UserService;
 
-@AllArgsConstructor
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
 
-    private UserService userService;
+    private final UserService userService;
 
-    @Tag(name = "post", description = "POST methods of API")
-    @Operation(summary = "Сохранить юзера", description = "Сохраняет юзера в бд (Любой, кто хоть раз написал /start)")
+    @Autowired
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
+
     @PostMapping
-    public ResponseEntity<String> registerUser(@RequestBody UserEntity user) {
-        try {
-            userService.save(user);
-        } catch (EntityExistsException e) {
-            return ResponseEntity.internalServerError().body(e.getMessage());
-        }
-        return ResponseEntity.ok("Пользователь сохранён");
+    @ResponseStatus(HttpStatus.CREATED)
+    public UserEntity createUser(@RequestBody UserEntity user) {
+        userService.save(user);
+        return user;
+    }
+
+    @GetMapping("/{id}")
+    public UserEntity getUser(@PathVariable Long id) {
+        return userService.get(id);
+    }
+
+    @GetMapping
+    public List<UserEntity> getAllUsers() {
+        return userService.getAll();
+    }
+
+    @PutMapping("/{id}")
+    public UserEntity updateUser(@PathVariable Long id, @RequestBody UserEntity user) {
+        user.setId(id);
+        userService.save(user);
+        return user;
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteUser(@PathVariable Long id) {
+        userService.remove(id);
     }
 }

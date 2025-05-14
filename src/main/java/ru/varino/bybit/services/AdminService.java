@@ -1,6 +1,5 @@
 package ru.varino.bybit.services;
 
-
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +11,6 @@ import ru.varino.bybit.repositories.UserRepository;
 
 import java.util.List;
 
-
 @Service
 public class AdminService implements ServiceInterface<AdminEntity> {
 
@@ -22,35 +20,45 @@ public class AdminService implements ServiceInterface<AdminEntity> {
     @Autowired
     private UserRepository userRepository;
 
+    /**
+     * Проверяет, является ли пользователь с заданным tgId администратором.
+     */
     public boolean isAdmin(Long tgId) {
-        UserEntity user = userRepository.findByTgId(tgId).orElseThrow(() -> new EntityNotFoundException("Пользователь не найден"));
+        UserEntity user = userRepository.findByTgId(tgId)
+                .orElseThrow(() -> new EntityNotFoundException("Пользователь с tgId " + tgId + " не найден"));
         return adminRepository.existsByUser(user);
-
-
     }
 
     @Override
     public void save(AdminEntity adminEntity) {
-        UserEntity user = userRepository.findById(adminEntity.getUser().getId()).orElseThrow(() -> new EntityNotFoundException("Пользователь не найден"))
+        // Ensure user exists
+        UserEntity user = userRepository.findById(adminEntity.getUser().getId())
+                .orElseThrow(() -> new EntityNotFoundException("Пользователь с id " + adminEntity.getUser().getId() + " не найден"));
         if (adminRepository.existsByUser(user)) {
-            throw new EntityExistsException("Пользователь уже является админом");
+            throw new EntityExistsException("Пользователь уже является администратором");
         }
+        adminEntity.setUser(user);
         adminRepository.save(adminEntity);
-
     }
 
     @Override
     public void remove(Long id) {
-
+        int intId = id.intValue();
+        if (!adminRepository.existsById(intId)) {
+            throw new EntityNotFoundException("Админ с id " + id + " не найден");
+        }
+        adminRepository.deleteById(intId);
     }
 
     @Override
     public AdminEntity get(Long id) {
-        return null;
+        int intId = id.intValue();
+        return adminRepository.findById(intId)
+                .orElseThrow(() -> new EntityNotFoundException("Админ с id " + id + " не найден"));
     }
 
     @Override
     public List<AdminEntity> getAll() {
-        return List.of();
+        return adminRepository.findAll();
     }
 }
