@@ -59,7 +59,6 @@ jobs:
           known_hosts: ${{ secrets.KNOWN_HOSTS }}
 
 
-
       - name: Deploy to server
         run: |
           ssh -o StrictHostKeyChecking=no ${{ env.SSH_USER }}@${{ env.SSH_HOST }} << EOF
