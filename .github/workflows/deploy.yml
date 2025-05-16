@@ -1,0 +1,81 @@
+name: CD Pipeline
+run-name: ${{ github.actor }} pushed to main. CD Pipeline running...
+# Actions that cause pipeline running
+on:
+  push:
+    branches: [ "main" ]
+
+env:
+  DOCKER_IMAGE_NAME: varino/pivocrypto
+  DOCKER_TAG: latest
+  SSH_HOST: 194.87.76.27
+  SSH_USER: root
+  SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+  DB_URL: jdbc:postgresql://localhost:5432/postgres
+  DB_USERNAME: postgres
+  DB_PASSWORD: ${{ env.DB_PASSWORD }}
+  DOCKER_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+  DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+
+
+
+jobs:
+  # Main job
+  Build-And-Deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      # Tests are skipped cuz all tests must be passed in pull request, only after that pushing in main branch is allowed
+      - name: Build Jar-File
+        run: mvn -B package --file pom.xml -DskipTests
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ env.DOCKER_IMAGE_NAME }}:${{ env.DOCKER_TAG }}
+          file: ./Dockerfile
+
+
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ env.SSH_KEY }}
+          known_hosts: ${{ secrets.KNOWN_HOSTS }}
+
+
+
+      - name: Deploy to server
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ env.SSH_USER }}@${{ env.SSH_HOST }} << EOF
+          echo "${{ env.DOCKER_TOKEN }}" | docker login -u ${{ env.DOCKER_USERNAME }} --password-stdin
+          docker pull ${{ env.DOCKER_IMAGE_NAME }}:${{ env.DOCKER_TAG }}
+          docker stop pivoAPI && \
+          docker rmi {{ env.DOCKER_IMAGE_NAME }}:${{ env.DOCKER_TAG }}
+
+          docker run -itd \
+          --name pivoAPI \
+          --restart unless-stopped \
+          -p 8080:8080 \
+          -e SPRING_DATASOURCE_URL=${{ env.DB_URL }} \
+          -e SPRING_DATASOURCE_USERNAME=${{ env.DB_USERNAME }} \
+          -e SPRING_DATASOURCE_PASSWORD=${{ env.DB_PASSWORD }} \
+          --add-host=host.docker.internal:host-gateway \
+          --net=host \
+          ${{ env.DOCKER_IMAGE_NAME }}:${{ env.DOCKER_TAG }}
+          EOF
