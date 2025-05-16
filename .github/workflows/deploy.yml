@@ -13,7 +13,7 @@ env:
   SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
   DB_URL: jdbc:postgresql://localhost:5432/postgres
   DB_USERNAME: postgres
-  DB_PASSWORD: ${{ env.DB_PASSWORD }}
+  DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
   DOCKER_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
   DOCKER_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
 
