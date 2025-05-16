@@ -63,12 +63,19 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ${{ env.SSH_USER }}@${{ env.SSH_HOST }} << EOF
           echo "${{ env.DOCKER_TOKEN }}" | docker login -u ${{ env.DOCKER_USERNAME }} --password-stdin
-          docker pull ${{ env.DOCKER_IMAGE_NAME }}:${{ env.DOCKER_TAG }}
+          
+          echo "Removing image"
+          docker rmi varino/pivocrypto:latest
+          
+          echo "Stopping pivoAPI"
           docker stop pivoAPI
-          docker rm -f pivoAPI || true
-          docker rmi {{ env.DOCKER_IMAGE_NAME }}:${{ env.DOCKER_TAG }}
-          docker rm -f pivoAPI || true
-
+          
+          echo "Removing unactive container"
+          docker rm -f pivoAPI
+          
+          echo "Pulling actual version"
+          docker pull ${{ env.DOCKER_IMAGE_NAME }}:${{ env.DOCKER_TAG }}
+          
           docker run -itd \
           --name pivoAPI \
           --restart unless-stopped \
