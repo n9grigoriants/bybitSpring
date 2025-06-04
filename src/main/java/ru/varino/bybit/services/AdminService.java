@@ -43,17 +43,15 @@ public class AdminService implements ServiceInterface<AdminEntity> {
 
     @Override
     public void remove(Long id) {
-        int intId = id.intValue();
-        if (!adminRepository.existsById(intId)) {
+        if (!adminRepository.existsById(id)) {
             throw new EntityNotFoundException("Админ с id " + id + " не найден");
         }
-        adminRepository.deleteById(intId);
+        adminRepository.deleteById(id);
     }
 
     @Override
     public AdminEntity get(Long id) {
-        int intId = id.intValue();
-        return adminRepository.findById(intId)
+        return adminRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Админ с id " + id + " не найден"));
     }
 
